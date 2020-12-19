@@ -60,6 +60,7 @@ int main(int argc, const char *argv[])
     FILE *ofp = NULL;
     unsigned int print_interval = (unsigned int)ceil(step / 100.0);
     unsigned int print_start = step % print_interval;
+    time_t begin_time = time(NULL);
 
     puts("Running, please wait...");
     for (n = 0u; n < step; ++ n)
@@ -69,6 +70,7 @@ int main(int argc, const char *argv[])
         Operate_matrix_one_time(& board);
     }
     puts("");
+    printf("Time used for simulation: %3u s.\n", (unsigned int)(time(NULL) - begin_time));
 
     printf("Final   status: total magnetic moment is %5d m, total energy is %5d J.\n", 
         Calc_magnet(board), Calc_energy(board));

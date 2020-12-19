@@ -17,13 +17,21 @@ Use command arguments to control this program. Use "-h" argument to see help.
 
 Do not just double-click this program, run it within a command console instead.
 
-before running, make sure the encoding of the console is set to UTF-8, 
+Before running, make sure the encoding of the console is set to UTF-8, 
 which you can achieve by input "chcp 65001" and press <Enter> under Windows.
 
 Under Windows OS, do not run under a cmd or powershell environment, as it does not support
 the escape code by default. A cygwin console, a cmder console, or a "Windows terminal" is suggested.
 
 Under Linux OS, compile with "-m" option while using gcc.
+
+There was a Python version years before, but the drawing method is not elegant enough.
+M ay be pushed later.
+
+"step" may sometimes be greater than 2^32-1, which is usually the largest "unsigned int", but change 
+it to "unsigned long long int" may cause a lot of troubles. Hence if you want more steps, just run a
+shorter time and then continue running with "-f Metropolis_Monte_Carlo_result.txt" using the old 
+result until reaching your expecting steps.
 
 Looking forward to feedback by email to snljty@sina.com .
 

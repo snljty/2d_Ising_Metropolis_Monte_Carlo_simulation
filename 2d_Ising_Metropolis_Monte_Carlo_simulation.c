@@ -143,6 +143,7 @@ matrix Read_data(int argc, const char *argv[])
             break;
         if (! strcmp(argv[t], "-h") || ! strcmp(argv[t], "--help"))
         {
+            puts("This program performs a Metropolis Monte Carlo simulation of 2-dimensional Ising model.");
             puts("Usage: ");
             puts("2d_Ising_Metropolis_Monte_Carlo_simulation.exe [OPTIONS]");
             puts("");

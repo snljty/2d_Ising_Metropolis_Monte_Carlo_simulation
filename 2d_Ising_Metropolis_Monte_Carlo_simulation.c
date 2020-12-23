@@ -271,9 +271,9 @@ matrix Read_data(int argc, const char *argv[])
     }
     else
     {
+        half = (ret.col - 1u) / 2u + 1u;
         if (ret.col % 2u)
         {
-            half = (ret.col - 1u) / 2u + 1u;
             for (i = 0u; i < half; ++ i)
             {
                 for (j = 0u; j < half; ++ j)
@@ -291,7 +291,6 @@ matrix Read_data(int argc, const char *argv[])
         }
         else
         {
-            half = (ret.col - 1) / 2 + 1;
             for (i = 0u; i < ret.row; ++ i)
             {
                 for (j = 0u; j < half; ++ j)

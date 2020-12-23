@@ -18,8 +18,10 @@ double temperature = 2.0;
 
 enum _bool {False, True};
 typedef enum _bool Bool;
+/*  the spin status  */
 enum _spin {down = -1, up = 1};
 typedef enum _spin spin;
+/*  a spin matrix contains its content and size.  */
 struct _matrix
 {
     spin **content;
@@ -27,29 +29,40 @@ struct _matrix
     unsigned int col;
 };
 typedef struct _matrix matrix;
+/*  below are for printing with colors using "escape code".  */
 enum _fg_color {fg_Black = 30, fg_Red, fg_Green, fg_Yellow, fg_Blue, fg_Magenta, fg_Cyan, fg_White};
 enum _bg_color {bg_Black = 40, bg_Red, bg_Green, bg_Yellow, bg_Blue, bg_Magenta, bg_Cyan, bg_White};
 typedef enum _fg_color fg_color;
 typedef enum _bg_color bg_color;
 
+/*  allocate memory for a spin board.  */
 matrix Init_matrix(unsigned int row, unsigned int col);
 
+/*  release memory and set abandoned pointers to NULL.  */
 void Delete_matrix(matrix *matp);
 
+/*  read arguments from command line, generate initial board and show information about it.  */
 matrix Read_data(int argc, const char *argv[]);
 
+/*  print the matrix using escape code on terminal.  */
 void Print_matrix(matrix mat);
 
+/*  print the matrix in a formated format to a file.  */
 void Print_matrix_simple(matrix mat, FILE *fp);
 
+/*  calculates energy at one specific grid.  */
 int Calc_one_energy(matrix mat, unsigned int posi, unsigned int posj);
 
+/*  calculates energy of the whole board.  */
 int Calc_energy(matrix mat);
 
+/*  calculates total moment of magnet of a board.  */
 int Calc_magnet(matrix mat);
 
+/*  print a progress bar on terminal.  */
 void Print_progress(double progress);
 
+/*  do one operation on the board.  */
 void Operate_matrix_one_time(matrix *matp);
 
 

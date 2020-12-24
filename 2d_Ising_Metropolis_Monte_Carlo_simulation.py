@@ -35,12 +35,22 @@ Execute the process.
     figs= [None, None]
     axs = [None, None]
     Read_data()
-    figs[0], axs[0] = Draw_matrix('$T = %.2f\\, J/k_\\mathrm{B}$, Step = 0' % args.temperature)
+    figs[0], axs[0] = Print_matrix('$T = %.2f\\, J/k_\\mathrm{B}$, Step = 0' % args.temperature)
     figs[0].savefig('Metropolis_Monte_Carlo_initial.png')
+    print('Initial status: total magnetic moment is %5d m, total energy is %5d J.' % (Calc_magnet(), 
+                                                                                      Calc_energy()))
+    print('The initial status has been saved to "Metropolis_Monte_Carlo_initial.png".')
     for n in tqdm.trange(args.step):
         Operate_matrix_one_time()
-    figs[1], axs[1] = Draw_matrix('$T = %.2f\\, J/k_\\mathrm{B}$, Step = %d' % (args.temperature, args.step))
+    figs[1], axs[1] = Print_matrix('$T = %.2f\\, J/k_\\mathrm{B}$, Step = %d' % (args.temperature, args.step))
     figs[1].savefig('Metropolis_Monte_Carlo_result.png')
+    print('Final   status: total magnetic moment is %5d m, total energy is %5d J.' % (Calc_magnet(), 
+                                                                                      Calc_energy()))
+    print('The final status has been saved to "Metropolis_Monte_Carlo_result.png".')
+    print(u'Minimum energy: total magnetic moment is \u00b1%4d m, total energy is %5d J.' % 
+        (board.shape[0] * board.shape[1], -2 * board.shape[0] * board.shape[1]))
+    print('The final status has also been saved to "Metropolis_Monte_Carlo_result.txt".')
+    Print_matrix_simple('Metropolis_Monte_Carlo_result.txt')
     plt.show()
     return
 
@@ -60,8 +70,8 @@ parse command line arguments, and initial the board.
         help = 'name of file contains initial status, "-" means to read from stdin.')
     global args
     args = parser.parse_args()
-    if args.length <= 0:
-        raise ValueError('Error! Length should be positive, but it is %d.' % args.length)
+    if args.length <= 1:
+        raise ValueError('Error! Length should be at least 2, but it is %d.' % args.length)
     if args.step <= 0:
         raise ValueError('Error! Step should be positive, but it is %d.' % args.step)
     if args.temperature <= 0:
@@ -90,7 +100,11 @@ parse command line arguments, and initial the board.
                 for j in range(half, board.shape[1]):
                     board[i, j] = spin['down']
     else:
-        board_tmp = np.loadtxt(args.filename if args.filename != '-' else sys.stdin, unpack = 'True')
+        if args.filename == '-':
+            print('Reading initial status from stdin, please input:')
+            board_tmp = np.loadtxt(sys.stdin)
+        else:
+            board_tmp = np.loadtxt(args.filename)
         if board_tmp.shape != board.shape:
             raise ValueError('Error! Shape of input (%d, %d) does not match ' + 
                 'that specified by "length": (%d, %d).' % board_tmp.shape + board.shape)
@@ -145,7 +159,7 @@ do one operation on the board
         board[posi, posj] = - board[posi, posj]
     return
 
-def Draw_matrix(title):
+def Print_matrix(title):
     r'''
 draw the current status
 '''
@@ -156,6 +170,14 @@ draw the current status
     ax.set_yticks(list())
     ax.set_title(title)
     return fig, ax
+
+def Print_matrix_simple(outputname):
+    r'''
+out put the result to 'outputname' for continue running or other use.
+'''
+    global board
+    with open(outputname, 'wt') as f:
+        for i in range(board.shape[0]): print(* ['%2d' % board[i][j] for j in range(board.shape[1])], file = f)
 
 if __name__ == '__main__':
     main()

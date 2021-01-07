@@ -165,7 +165,7 @@ draw the current status
 '''
     global board
     fig, ax = plt.subplots()
-    ax.imshow(board, plt.cm.hot)
+    ax.imshow(board, cmap = plt.cm.hot, vmin = -1, vmax = 1)
     ax.set_xticks(list())
     ax.set_yticks(list())
     ax.set_title(title)

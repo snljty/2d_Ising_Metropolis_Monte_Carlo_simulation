@@ -21,9 +21,9 @@ Before running, make sure the encoding of the console is set to UTF-8,
 which you can achieve by input "chcp 65001" and press <Enter> under Windows.
 
 Under Windows OS, do not run under a cmd or powershell environment, as it does not support
-the escape code by default. A cygwin console, a cmder console, or a "Windows terminal" is suggested.
+the escape code by default. A cygwin console, a cmder console, or a "Windows terminal" is recommended.
 
-Under Linux OS, compile with "-m" option while using gcc.
+Under Linux OS, compile with "-m" option while using gcc to link with functions in "math.h".
 
 There was a Python version years before, but the drawing method is not elegant enough.
 M ay be pushed later.

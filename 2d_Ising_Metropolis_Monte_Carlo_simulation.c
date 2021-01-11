@@ -97,7 +97,7 @@ int main(int argc, const char *argv[])
     }
     Print_matrix_simple(board, ofp);
     printf("Minimum energy: total magnetic moment is ±%4d m, total energy is %5d J.\n", 
-        board.row * board.col, -2 * board.row * board.col);
+        board.row * board.col, - 2 * board.row * board.col);
     puts("A copy of the result has been set to \"Metropolis_Monte_Carlo_result.txt\".");
 
     fclose(ofp);
@@ -246,6 +246,11 @@ matrix Read_data(int argc, const char *argv[])
         printf("Error! length must be at least 2, but it is %u.\n", length);
         exit(error_value);
     }
+    if (step <= 0)
+    {
+        printf("Error! step must be at least 1, but it is %u.\n", step);
+        exit(error_value);
+    }  
     printf("length = %u, step = %u, temperature = %.1lf, filename = \"%s\"\n", 
         length, step, temperature, filename);
 
@@ -263,7 +268,11 @@ matrix Read_data(int argc, const char *argv[])
             for (i = 0u; i < ret.row; ++ i)
                 for (j = 0u; j < ret.col; ++ j)
                 {
-                    fscanf(ifp, "%d", & tmp_value);
+                    if (fscanf(ifp, "%d", & tmp_value) != 1)
+                    {
+                        puts("Error setting initial status!");
+                        exit(error_value);
+                    }
                     ret.content[i][j] = tmp_value > 0 ? up : down;
                 }
             fclose(ifp);
@@ -275,7 +284,11 @@ matrix Read_data(int argc, const char *argv[])
             for (i = 0u; i < ret.row; ++ i)
                 for (j = 0u; j < ret.col; ++ j)
                 {
-                    scanf("%d", & tmp_value);
+                    if (scanf("%d", & tmp_value) != 1)
+                    {
+                        puts("Error setting initial status!");
+                        exit(error_value);
+                    }
                     ret.content[i][j] = tmp_value > 0 ? up : down;
                 }
             while (getchar() != '\n')

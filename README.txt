@@ -20,8 +20,9 @@ Do not just double-click this program, run it within a command console instead.
 Before running, make sure the encoding of the console is set to UTF-8, 
 which you can achieve by input "chcp 65001" and press <Enter> under Windows.
 
-Under Windows OS, do not run under a cmd or powershell environment, as it does not support
-the escape code by default. A cygwin console, a cmder console, or a "Windows terminal" is recommended.
+Under Windows OS, the previous version cannot be run on a cmd or powershell environment, as they 
+do not support the escape code by default. A cygwin console, a cmder console, or a "Windows terminal" is recommended. In the current version, the Windows handle technics is used to print color, hence it
+should has a normal performance in all situations.
 
 Under Linux OS, compile with "-m" option while using gcc to link with functions in "math.h".
 

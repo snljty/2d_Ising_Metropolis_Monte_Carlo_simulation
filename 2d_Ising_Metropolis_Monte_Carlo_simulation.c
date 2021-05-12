@@ -8,10 +8,6 @@
 # include <string.h>
 # include <time.h>
 
-# ifdef WIN32
-# include <Windows.h>
-# endif
-
 # define error_reading -1
 # define error_value -2
 
@@ -34,12 +30,10 @@ struct _matrix
 };
 typedef struct _matrix matrix;
 /*  below are for printing with colors using "escape code".  */
-# ifndef WIN32
 enum _fg_color {fg_Black = 30, fg_Red, fg_Green, fg_Yellow, fg_Blue, fg_Magenta, fg_Cyan, fg_White};
 enum _bg_color {bg_Black = 40, bg_Red, bg_Green, bg_Yellow, bg_Blue, bg_Magenta, bg_Cyan, bg_White};
 typedef enum _fg_color fg_color;
 typedef enum _bg_color bg_color;
-# endif
 
 /*  allocate memory for a spin board.  */
 matrix Init_matrix(unsigned int row, unsigned int col);
@@ -49,6 +43,9 @@ void Delete_matrix(matrix *matp);
 
 /*  read arguments from command line, generate initial board and show information about it.  */
 matrix Read_data(int argc, const char *argv[]);
+
+/*  initialize print with escape code  */
+void Init_print_escape_code(void);
 
 /*  print the matrix using escape code on terminal.  */
 void Print_matrix(matrix mat);
@@ -333,8 +330,9 @@ matrix Read_data(int argc, const char *argv[])
         }
     }
 
-    printf("Initial status: total magnetic moment is %5d m, total energy is %5d J.\n", 
+    printf("Initial status: total magnetic moment is %5d m, total energy is %5d J.\n", \
         Calc_magnet(ret), Calc_energy(ret));
+    Init_print_escape_code();
     Print_matrix(ret);
 
     /*  set the seed of random here.  */
@@ -343,12 +341,16 @@ matrix Read_data(int argc, const char *argv[])
     return ret;
 }
 
+inline void Init_print_escape_code(void)
+{
+    system("");
+
+    return;
+}
+
 void Print_matrix(matrix mat)
 {
     unsigned int i = 0u, j = 0u;
-    # ifdef WIN32
-    HANDLE stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    # endif
 
     for (i = 0u; i < mat.row; ++ i)
     {
@@ -357,25 +359,11 @@ void Print_matrix(matrix mat)
             if (j)
                 printf(" ");
             if (mat.content[i][j] == up)
-            {
-                # ifdef WIN32
-                SetConsoleTextAttribute(stdout_handle, FOREGROUND_RED);
-                printf("↑");
-                SetConsoleTextAttribute(stdout_handle, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-                # else
                 printf("\033[%um↑\033[0m", fg_Red);
-                # endif
-            }
             else if (mat.content[i][j] == down)
-            {
-                # ifdef WIN32
-                SetConsoleTextAttribute(stdout_handle, FOREGROUND_BLUE);
-                printf("↓");
-                SetConsoleTextAttribute(stdout_handle, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-                # else
                 printf("\033[%um↓\033[0m", fg_Blue);
-                # endif
-            }
+            else
+                printf("\033[%um0\033[0m", fg_Green); /* should never happen */
         }
         printf("\n");
     }

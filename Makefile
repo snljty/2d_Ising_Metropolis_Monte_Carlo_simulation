@@ -3,11 +3,15 @@
 CC = gcc
 CLINKER = gcc
 CC_FLAGS = -O3
-CLINKER_FLAGS = -O3
+CLINKER_FLAGS = -O3 -static
 
 .PHONY: all
 
-all: 2d_Ising_Metropolis_Monte_Carlo_simulation.exe
+all: 2d_Ising_Metropolis_Monte_Carlo_simulation
+
+.PHONY: 2d_Ising_Metropolis_Monte_Carlo_simulation
+
+2d_Ising_Metropolis_Monte_Carlo_simulation: 2d_Ising_Metropolis_Monte_Carlo_simulation.exe
 
 2d_Ising_Metropolis_Monte_Carlo_simulation.exe: 2d_Ising_Metropolis_Monte_Carlo_simulation.o
 	$(CLINKER) $(CLINKER_FLAGS) -o $@ $< -l m

@@ -152,6 +152,9 @@ matrix Read_data(int argc, const char *argv[])
     unsigned int half = 0u;
     int tmp_value = 0;
 
+    # ifdef __WIN32
+    system("CHCP 65001 1> NUL");
+    # endif
     t = 1u;
     while (True)
     {

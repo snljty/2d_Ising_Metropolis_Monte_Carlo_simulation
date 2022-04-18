@@ -11,13 +11,11 @@
 # define error_reading -1
 # define error_value -2
 
-char filename[BUFSIZ + 1u] = "";
-unsigned int length = 20u;
-unsigned int step = 1E6;
+char filename[BUFSIZ + 1] = "";
+int length = 20;
+int step = 1000000;
 double temperature = 2.0;
 
-enum _bool {False, True};
-typedef enum _bool Bool;
 /*  the spin status  */
 enum _spin {down = -1, up = 1};
 typedef enum _spin spin;
@@ -25,8 +23,8 @@ typedef enum _spin spin;
 struct _matrix
 {
     spin **content;
-    unsigned int row;
-    unsigned int col;
+    int row;
+    int col;
 };
 typedef struct _matrix matrix;
 /*  below are for printing with colors using "escape code".  */
@@ -36,13 +34,13 @@ typedef enum _fg_color fg_color;
 typedef enum _bg_color bg_color;
 
 /*  allocate memory for a spin board.  */
-matrix Init_matrix(unsigned int row, unsigned int col);
+matrix Init_matrix(int row, int col);
 
 /*  release memory and set abandoned pointers to NULL.  */
 void Delete_matrix(matrix *matp);
 
 /*  read arguments from command line, generate initial board and show information about it.  */
-matrix Read_data(int argc, const char *argv[]);
+matrix Read_data(int argc, char const *argv[]);
 
 /*  initialize print with escape code  */
 void Init_print_escape_code(void);
@@ -54,7 +52,7 @@ void Print_matrix(matrix mat);
 void Print_matrix_simple(matrix mat, FILE *fp);
 
 /*  calculates energy at one specific grid.  */
-int Calc_one_energy(matrix mat, unsigned int posi, unsigned int posj);
+int Calc_one_energy(matrix mat, int posi, int posj);
 
 /*  calculates energy of the whole board.  */
 int Calc_energy(matrix mat);
@@ -69,24 +67,24 @@ void Print_progress(double progress);
 void Operate_matrix_one_time(matrix *matp);
 
 
-int main(int argc, const char *argv[])
+int main(int argc, char const *argv[])
 {
-    unsigned int n = 0u;
+    int n = 0;
     matrix board = Read_data(argc, argv);
     FILE *ofp = NULL;
-    unsigned int print_interval = (unsigned int)ceil(step / 100.0);
-    unsigned int print_start = step % print_interval;
+    int print_interval = (int)ceil(step / 100.0);
+    int print_start = step % print_interval;
     time_t begin_time = time(NULL);
 
-    puts("Running, please wait...");
-    for (n = 0u; n < step; ++ n)
+    printf("Running, please wait...\n");
+    for (n = 0; n < step; ++ n)
     {
         if (! ((n - print_start) % print_interval))
-            Print_progress((double)(n + 1u) / step);
+            Print_progress((double)(n + 1) / step);
         Operate_matrix_one_time(& board);
     }
-    puts("");
-    printf("Time used for simulation: %3u s.\n", (unsigned int)(time(NULL) - begin_time));
+    printf("\n");
+    printf("Time used for simulation: %3 s.\n", (int)(time(NULL) - begin_time));
 
     printf("Final   status: total magnetic moment is %5d m, total energy is %5d J.\n", 
         Calc_magnet(board), Calc_energy(board));
@@ -95,13 +93,13 @@ int main(int argc, const char *argv[])
     ofp = fopen("Metropolis_Monte_Carlo_result.txt", "wt");
     if (! ofp)
     {
-        puts("Cannot open \"Metropolis_Monte_Carlo_result.txt\"!");
+        fprintf(stderr, "Cannot open \"Metropolis_Monte_Carlo_result.txt\"!\n");
         exit(error_reading);
     }
     Print_matrix_simple(board, ofp);
     printf("Minimum energy: total magnetic moment is ±%4d m, total energy is %5d J.\n", 
         board.row * board.col, - 2 * board.row * board.col);
-    puts("A copy of the result has been set to \"Metropolis_Monte_Carlo_result.txt\".");
+    printf("A copy of the result has been set to \"Metropolis_Monte_Carlo_result.txt\".\n");
 
     fclose(ofp);
     ofp = NULL;
@@ -111,16 +109,16 @@ int main(int argc, const char *argv[])
 }
 
 
-matrix Init_matrix(unsigned int row, unsigned int col)
+matrix Init_matrix(int row, int col)
 {
-    unsigned int i = 0u;
+    int i = 0;
     matrix ret = {NULL, row, col};
     ret.content = row && col ? (spin **)malloc(row * sizeof(spin *)) : NULL;
 
     if (! ret.content)
         return ret;
     ret.content[0] = (spin *)malloc(row * col * sizeof(spin));
-    for (i = 1u; i < row; ++ i)
+    for (i = 1; i < row; ++ i)
         ret.content[i] = ret.content[i - 1] + col;
 
     return ret;
@@ -128,122 +126,122 @@ matrix Init_matrix(unsigned int row, unsigned int col)
 
 void Delete_matrix(matrix *matp)
 {
-    unsigned int i = 0u;
+    int i = 0;
 
     if (matp->content[0])
         free(matp->content[0]);
-    for (i = 0u; i < matp->row; ++ i)
+    for (i = 0; i < matp->row; ++ i)
         matp->content[i] = NULL;
     if (matp->content)
         free(matp->content);
     matp->content = NULL;
-    matp->row = 0u;
-    matp->col = 0u;
+    matp->row = 0;
+    matp->col = 0;
 
     return;
 }
 
 matrix Read_data(int argc, const char *argv[])
 {
-    matrix ret = {NULL, 0u, 0u};
-    unsigned int t = 1u;
+    matrix ret = {NULL, 0, 0};
+    int iarg = 1;
     FILE *ifp = NULL;
-    unsigned int i = 0u, j = 0u;
-    unsigned int half = 0u;
+    int i = 0, j = 0;
+    int half = 0;
     int tmp_value = 0;
 
     # ifdef __WIN32
     system("CHCP 65001 1> NUL");
     # endif
-    t = 1u;
-    while (True)
+    iarg = 1;
+    for (;;)
     {
-        if (t >= argc)
+        if (iarg >= argc)
             break;
-        if (! strcmp(argv[t], "-h") || ! strcmp(argv[t], "--help"))
+        if (! strcmp(argv[iarg], "-h") || ! strcmp(argv[iarg], "--help"))
         {
-            puts("This program performs a Metropolis Monte Carlo simulation of 2-dimensional Ising model.");
-            puts("Usage: ");
-            puts("2d_Ising_Metropolis_Monte_Carlo_simulation.exe [OPTIONS]");
-            puts("");
-            puts("OPTIONS:");
-            puts("-h, --help              Print this message and exit unnormally.");
-            puts("-l, --length            Number of atoms on each side.");
-            puts("-s, --step              Number of total steps.");
-            puts("-t, --temperature       Temperature (in unit J/k_Boltzmann)");
-            puts("-f, --filename          Name of file contains initial status, ");
-            puts("                        \"-\" means to read from stdin.");
-            puts("");
-            puts("The default argumets are \"-l 20 -s 1000000 -t 2.0\".");
-            puts("And the default initial status is about the left half");
-            puts("is up-spin, and about the right half is down-spin.");
-            puts("");
-            puts("Please pay attention that the Curie temperature ");
-            puts("of the analytic solution is 2/ln(1+sqrt(2)) = 2.269 J/k_B.");
-            exit(error_reading);
+            printf("This program performs a Metropolis Monte Carlo simulation of 2-dimensional Ising model.\n");
+            printf("Usage: \n");
+            printf("2d_Ising_Metropolis_Monte_Carlo_simulation.exe [OPTIONS]\n");
+            printf("\n");
+            printf("OPTIONS:\n");
+            printf("-h, --help              Print this message and exit unnormally.\n");
+            printf("-l, --length            Number of atoms on each side.\n");
+            printf("-s, --step              Number of total steps.\n");
+            printf("-t, --temperature       Temperature (in unit J/k_Boltzmann)\n");
+            printf("-f, --filename          Name of file contains initial status, \n");
+            printf("                        \"-\" means to read from stdin.\n");
+            printf("\n");
+            printf("The default argumets are \"-l 20 -s 1000000 -t 2.0\".\n");
+            printf("And the default initial status is about the left half\n");
+            printf("is up-spin, and about the right half is down-spin.\n");
+            printf("\n");
+            printf("Please pay attention that the Curie temperature \n");
+            printf("of the analytic solution is 2/ln(1+sqrt(2)) = 2.269 J/k_B.\n");
+            exit(EXIT_SUCCESS);
         }
-        if (! strcmp(argv[t], "-l") || ! strcmp(argv[t], "--length"))
+        if (! strcmp(argv[iarg], "-l") || ! strcmp(argv[iarg], "--length"))
         {
-            if (t == argc - 1)
+            if (iarg == argc - 1)
             {
-                printf("Error! Missing value for \"%s\".\n", argv[t]);
+                printf("Error! Missing value for \"%s\".\n", argv[iarg]);
                 exit(error_reading);
             }
-            ++ t;
-            if (sscanf(argv[t], "%u", & length) != 1)
+            ++ iarg;
+            if (sscanf(argv[iarg], "%u", & length) != 1)
             {
-                printf("Error! Cannot set value for \"length\" from \"%s\".\n", argv[t]);
+                printf("Error! Cannot set value for \"length\" from \"%s\".\n", argv[iarg]);
                 exit(error_reading);
             }
-            ++ t;
+            ++ iarg;
             continue;
         }
-        if (! strcmp(argv[t], "-s") || ! strcmp(argv[t], "--step"))
+        if (! strcmp(argv[iarg], "-s") || ! strcmp(argv[iarg], "--step"))
         {
-            if (t == argc - 1)
+            if (iarg == argc - 1)
             {
-                printf("Error! Missing value for \"%s\".\n", argv[t]);
+                printf("Error! Missing value for \"%s\".\n", argv[iarg]);
                 exit(error_reading);
             }
-            ++ t;
-            if (sscanf(argv[t], "%u", & step) != 1)
+            ++ iarg;
+            if (sscanf(argv[iarg], "%u", & step) != 1)
             {
-                printf("Error! Cannot set value for \"step\" from \"%s\".\n", argv[t]);
+                printf("Error! Cannot set value for \"step\" from \"%s\".\n", argv[iarg]);
                 exit(error_reading);
             }
-            ++ t;
+            ++ iarg;
             continue;
         }
-        if (! strcmp(argv[t], "-t") || ! strcmp(argv[t], "--temperature"))
+        if (! strcmp(argv[iarg], "-t") || ! strcmp(argv[iarg], "--temperature"))
         {
-            if (t == argc - 1)
+            if (iarg == argc - 1)
             {
-                printf("Error! Missing value for \"%s\".\n", argv[t]);
+                printf("Error! Missing value for \"%s\".\n", argv[iarg]);
                 exit(error_reading);
             }
-            ++ t;
-            if (sscanf(argv[t], "%lf", & temperature) != 1)
+            ++ iarg;
+            if (sscanf(argv[iarg], "%lf", & temperature) != 1)
             {
-                printf("Error! Cannot set value for \"temperature\" from \"%s\".\n", argv[t]);
+                printf("Error! Cannot set value for \"temperature\" from \"%s\".\n", argv[iarg]);
                 exit(error_reading);
             }
-            ++ t;
+            ++ iarg;
             continue;
         }
-        if (! strcmp(argv[t], "-f") || ! strcmp(argv[t], "--filename"))
+        if (! strcmp(argv[iarg], "-f") || ! strcmp(argv[iarg], "--filename"))
         {
-            if (t == argc - 1)
+            if (iarg == argc - 1)
             {
-                printf("Error! Missing value for \"%s\".\n", argv[t]);
+                printf("Error! Missing value for \"%s\".\n", argv[iarg]);
                 exit(error_reading);
             }
-            ++ t;
-            strncpy(filename, argv[t], BUFSIZ + 1u);
-            ++ t;
+            ++ iarg;
+            strncpy(filename, argv[iarg], BUFSIZ + 1);
+            ++ iarg;
             continue;
         }
 
-        printf("Error! Unknown argument: \"%s\"\n", argv[t]);
+        printf("Error! Unknown argument: \"%s\"\n", argv[iarg]);
         exit(error_reading);
     }
 
@@ -271,12 +269,12 @@ matrix Read_data(int argc, const char *argv[])
                 printf("Error! Cannot read from \"%s\".\n", filename);
                 exit(error_reading);
             }
-            for (i = 0u; i < ret.row; ++ i)
-                for (j = 0u; j < ret.col; ++ j)
+            for (i = 0; i < ret.row; ++ i)
+                for (j = 0; j < ret.col; ++ j)
                 {
                     if (fscanf(ifp, "%d", & tmp_value) != 1)
                     {
-                        puts("Error setting initial status!");
+                        fprintf(stderr, "Error setting initial status!\n");
                         exit(error_value);
                     }
                     ret.content[i][j] = tmp_value > 0 ? up : down;
@@ -286,13 +284,13 @@ matrix Read_data(int argc, const char *argv[])
         }
         else
         {
-            puts("Reading initial status from stdin, please input:");
-            for (i = 0u; i < ret.row; ++ i)
-                for (j = 0u; j < ret.col; ++ j)
+            printf("Reading initial status from stdin, please input:\n");
+            for (i = 0; i < ret.row; ++ i)
+                for (j = 0; j < ret.col; ++ j)
                 {
                     if (scanf("%d", & tmp_value) != 1)
                     {
-                        puts("Error setting initial status!");
+                        fprintf(stderr, "Error setting initial status!\n");
                         exit(error_value);
                     }
                     ret.content[i][j] = tmp_value > 0 ? up : down;
@@ -303,29 +301,29 @@ matrix Read_data(int argc, const char *argv[])
     }
     else
     {
-        half = (ret.col - 1u) / 2u + 1u;
-        if (ret.col % 2u)
+        half = (ret.col - 1) / 2 + 1;
+        if (ret.col % 2)
         {
-            for (i = 0u; i < half; ++ i)
+            for (i = 0; i < half; ++ i)
             {
-                for (j = 0u; j < half; ++ j)
+                for (j = 0; j < half; ++ j)
                     ret.content[i][j] = up;
                 for (j = half; j < ret.col; ++ j)
                     ret.content[i][j] = down;
             }
             for (i = half; i < ret.row; ++ i)
             {
-                for (j = 0u; j < half - 1u; ++ j)
+                for (j = 0; j < half - 1; ++ j)
                     ret.content[i][j] = up;
-                for (j = half - 1u; j < ret.col; ++ j)
+                for (j = half - 1; j < ret.col; ++ j)
                     ret.content[i][j] = down;
             }
         }
         else
         {
-            for (i = 0u; i < ret.row; ++ i)
+            for (i = 0; i < ret.row; ++ i)
             {
-                for (j = 0u; j < half; ++ j)
+                for (j = 0; j < half; ++ j)
                     ret.content[i][j] = up;
                 for (j = half; j < ret.col; ++ j)
                     ret.content[i][j] = down;
@@ -353,11 +351,11 @@ inline void Init_print_escape_code(void)
 
 void Print_matrix(matrix mat)
 {
-    unsigned int i = 0u, j = 0u;
+    int i = 0, j = 0;
 
-    for (i = 0u; i < mat.row; ++ i)
+    for (i = 0; i < mat.row; ++ i)
     {
-        for (j = 0u; j < mat.col; ++ j)
+        for (j = 0; j < mat.col; ++ j)
         {
             if (j)
                 printf(" ");
@@ -376,11 +374,11 @@ void Print_matrix(matrix mat)
 
 void Print_matrix_simple(matrix mat, FILE *fp)
 {
-    unsigned int i = 0u, j = 0u;
+    int i = 0, j = 0;
 
-    for (i = 0u; i < mat.row; ++ i)
+    for (i = 0; i < mat.row; ++ i)
     {
-        for (j = 0u; j < mat.col; ++ j)
+        for (j = 0; j < mat.col; ++ j)
             fprintf(fp, " %2d" + ! j, mat.content[i][j]);
         fprintf(fp, "\n");
     }
@@ -388,7 +386,7 @@ void Print_matrix_simple(matrix mat, FILE *fp)
     return;
 }
 
-int Calc_one_energy(matrix mat, unsigned int posi, unsigned int posj)
+int Calc_one_energy(matrix mat, int posi, int posj)
 {
     int ene = 0;
 
@@ -409,12 +407,12 @@ int Calc_one_energy(matrix mat, unsigned int posi, unsigned int posj)
 
 int Calc_energy(matrix mat)
 {
-    unsigned int i = 0u, j = 0u;
+    int i = 0, j = 0;
     int ene = 0;
 
     ene = 0;
-    for (i = 0u; i < mat.row; ++ i)
-        for (j = 0u; j < mat.col; ++ j)
+    for (i = 0; i < mat.row; ++ i)
+        for (j = 0; j < mat.col; ++ j)
             ene += Calc_one_energy(mat, i, j);
 
     ene /= 2; /*  Each element has been calculated twice.  */
@@ -424,12 +422,12 @@ int Calc_energy(matrix mat)
 
 int Calc_magnet(matrix mat)
 {
-    unsigned int i = 0u, j = 0u;
+    int i = 0, j = 0;
     int mag = 0;
 
     mag = 0;
-    for (i = 0u; i < mat.row; ++ i)
-        for (j = 0u; j < mat.col; ++ j)
+    for (i = 0; i < mat.row; ++ i)
+        for (j = 0; j < mat.col; ++ j)
             mag += mat.content[i][j];
 
     return mag;
@@ -437,9 +435,9 @@ int Calc_magnet(matrix mat)
 
 void Print_progress(double progress)
 {
-    const unsigned int nsymbol = 50u;
-    unsigned int ncomplete = (unsigned int)floor(progress * nsymbol);
-    unsigned int i = 0u;
+    const int nsymbol = 50;
+    int ncomplete = (int)floor(progress * nsymbol);
+    int i = 0;
 
     if (progress > 1.0 - (1.0 / nsymbol) / 2)
     {
@@ -462,11 +460,11 @@ void Print_progress(double progress)
 void Operate_matrix_one_time(matrix *matp)
 {
     /*  This algorithm is not very good as the probability of the last grid is a bit lower.  */
-    unsigned int pos = (unsigned int)(matp->row * matp->col * ((double)rand() / (RAND_MAX + 1u)));
-    unsigned int posi = pos / matp->col, posj = pos % matp->col;
+    int pos = (int)(matp->row * matp->col * ((double)rand() / (RAND_MAX + 1)));
+    int posi = pos / matp->col, posj = pos % matp->col;
     int delta_ene = Calc_one_energy(* matp, posi, posj) * (-2);
 
-    if (delta_ene <= 0 || exp(- delta_ene / temperature) >= (double)rand() / (RAND_MAX + 1u))
+    if (delta_ene <= 0 || exp(- delta_ene / temperature) >= (double)rand() / (RAND_MAX + 1))
         matp->content[posi][posj] = - matp->content[posi][posj];
 
     return;
